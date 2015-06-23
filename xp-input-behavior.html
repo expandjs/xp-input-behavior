@@ -15,8 +15,8 @@ This behavior is used to add input capabilities on a custom element.
 @group behaviors
 @homepage http://expandjs.com/elements/xp-input-behavior
 
-@dependency polymer Polymer/polymer
-@dependency expandjs ExpandJS/expandjs
+@dependency polymer Polymer/polymer#^1.0.4
+@dependency expandjs ExpandJS/expandjs#0.9.1
 -->
 
 <link rel="import" href="../polymer/polymer.html">
@@ -135,7 +135,7 @@ This behavior is used to add input capabilities on a custom element.
          * @returns {Element}
          */
         findLabel: function () {
-            var self = this, label = (self.id && XP.getElement('html /deep/ label[for="' + self.id + '"]'));
+            var self = this, label = (self.id && XP.getElement('label[for="' + self.id + '"]'));
             return label || XP.findParentElement(Polymer.dom(self), 'label') || null;
         },
 
@@ -602,12 +602,10 @@ This behavior is used to add input capabilities on a custom element.
         _focusedChanged: function (post) {
 
             // Vars
-            var self   = this,
-                label  = self.findLabel(),
-                method = post ? 'focus' : 'blur';
+            var self = this;
 
             // Propagating
-            if (label && label[method]) { label[method](); }
+            XP.setAttribute(self.findLabel(), 'focused', post);
 
             // Validating
             if (self.injected && !post) { self._validate(); }
@@ -687,7 +685,7 @@ This behavior is used to add input capabilities on a custom element.
 
             // Setting
             self._setChanged(self.initial.value !== post);
-            self._setEmpty(self.value.length === 0);
+            self._setEmpty(!self.value);
             self.model = self.changed ? self._toModel(post) : self.initial.model;
 
             // Committing
