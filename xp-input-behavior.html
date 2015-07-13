@@ -16,7 +16,7 @@ This behavior is used to add input capabilities on a custom element.
 @homepage http://expandjs.com/elements/xp-input-behavior
 
 @dependency polymer Polymer/polymer#^1.0.0
-@dependency expandjs ExpandJS/expandjs#0.9.3
+@dependency expandjs ExpandJS/expandjs#0.9.4
 -->
 
 <link rel="import" href="../polymer/polymer.html">
@@ -146,7 +146,10 @@ This behavior is used to add input capabilities on a custom element.
          * @returns {Element}
          */
         reset: function () {
-            return XP.assign(this, this.initial);
+            var self = XP.assign(this, this.initial);
+            self._setInvalid(false);
+            self._setInvalidMessage(null);
+            return self;
         },
 
         /**
@@ -176,7 +179,7 @@ This behavior is used to add input capabilities on a custom element.
             var self = this;
 
             // Checking
-            if (!self.injected) { return self; }
+            if (!self.input) { return self; }
 
             // Updating
             self._update();
@@ -242,7 +245,7 @@ This behavior is used to add input capabilities on a custom element.
 
         // OBSERVERS
         observers: [
-            '_refresh(disabled, injected, name, readonly, required)'
+            '_refresh(disabled, input, name, readonly, required)'
         ],
 
         // PROPERTIES
@@ -410,14 +413,14 @@ This behavior is used to add input capabilities on a custom element.
             },
 
             /**
-             * The appended input's element.
+             * The physical input's element.
              *
-             * @attribute injected
+             * @attribute input
              * @type Element
              * @readonly
              */
-            injected: {
-                observer: '_injectedChanged',
+            input: {
+                observer: '_inputChanged',
                 readOnly: true,
                 value: null
             },
@@ -585,7 +588,7 @@ This behavior is used to add input capabilities on a custom element.
             var self = this;
 
             // Checking
-            if (!self.injected) { return; }
+            if (!self.input) { return; }
 
             // Setting
             self._setChanged(self.initial.checked !== post);
@@ -606,9 +609,6 @@ This behavior is used to add input capabilities on a custom element.
 
             // Propagating
             XP.setAttribute(self.findLabel(), 'focused', post);
-
-            // Validating
-            if (self.injected && !post) { self._validate(); }
         },
 
         // OBSERVER
@@ -621,15 +621,15 @@ This behavior is used to add input capabilities on a custom element.
             if (arguments.length < 2) { return; }
 
             // Listening
-            if (pre) { self.unlisten(pre, 'reset', '_changeHandler'); }
-            if (post) { self.listen(post, 'reset', '_changeHandler'); }
+            if (pre) { self.unlisten(pre, 'reset', '_resetHandler'); }
+            if (post) { self.listen(post, 'reset', '_resetHandler'); }
 
             // Refreshing
             self._refresh();
         },
 
         // OBSERVER
-        _injectedChanged: function (post, pre) {
+        _inputChanged: function (post, pre) {
 
             // Vars
             var self = this;
@@ -675,7 +675,7 @@ This behavior is used to add input capabilities on a custom element.
             var self = this;
 
             // Checking
-            if (!self.injected) { return; }
+            if (!self.input) { return; }
 
             // Sanitizing
             self._sanitize();
@@ -730,6 +730,10 @@ This behavior is used to add input capabilities on a custom element.
             // Vars
             var self = this;
 
+            // Checking
+            if (self._index === Polymer.XPInputBehavior._index) { return; }
+            if (self._index === Polymer.XPInputBehavior._index) { return; }
+
             // Disconnecting
             if (self.indexObserver) { self.indexObserver.disconnect(); }
 
@@ -737,7 +741,7 @@ This behavior is used to add input capabilities on a custom element.
             self.async(function () { self._index(Math.max(self.tabIndex, 0)); });
 
             // Setting
-            self.removeAttribute(self.injected ? 'tabindex' : '');
+            self.removeAttribute(self.input ? 'tabindex' : '');
 
             // Observing
             self.indexObserver = XP.onMutation(self, Polymer.XPInputBehavior.mutated.bind(self), {attributes: true, attributeFilter: ['tabindex']});
@@ -782,6 +786,11 @@ This behavior is used to add input capabilities on a custom element.
         // HANDLER
         _focusHandler: function () {
             this._setFocused(!this.disabled);
+        },
+
+        // HANDLER
+        _resetHandler: function () {
+            XP.delay(this.reset.bind(this));
         }
     };
 </script>
