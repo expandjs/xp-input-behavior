@@ -173,6 +173,23 @@ This behavior is used to add input capabilities on a custom element.
             return self;
         },
 
+        /**
+         * Sets invalid of adaptee to true or false
+         * 
+         * @method setInvalid 
+         * @param {string} [msg] 
+         * @param {boolean | Function} value
+         * @returns {Element}
+         */
+         setInvalid: function(msg, value) {
+             var self = this, _value;
+             if (value === undefined) { value = msg; msg = undefined; }
+             if (msg !== undefined) { self._setInvalidMessage(msg); }
+             _value = ( typeof value === 'function') ? value(self, self.isChanged, self.model) : value;
+             self._setInvalid(_value);
+             return self;
+         },
+         
         /*********************************************************************/
 
         /**
