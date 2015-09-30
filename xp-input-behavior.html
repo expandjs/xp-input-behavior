@@ -19,8 +19,8 @@ This behavior is used to add input capabilities on a custom element.
 @behavior xp-adapter-behavior /bower_components/xp-adapter-behavior/xp-adapter-behavior.html
 
 @dependency polymer Polymer/polymer#^1.1.0
-@dependency expandjs ExpandJS/expandjs#0.9.9
-@dependency xp-adapter-behavior ExpandJS/xp-adapter-behavior#0.9.9
+@dependency expandjs ExpandJS/expandjs#0.9.10
+@dependency xp-adapter-behavior ExpandJS/xp-adapter-behavior#0.9.10
 -->
 
 <link rel="import" href="../polymer/polymer.html">
@@ -66,14 +66,6 @@ This behavior is used to add input capabilities on a custom element.
          * @abstract
          */
         focus: XP.mock(),
-
-        /**
-         * The method that will select the input.
-         *
-         * @method select
-         * @abstract
-         */
-        select: XP.mock(),
 
         /**
          * The method that will update element's validation state.
@@ -128,6 +120,14 @@ This behavior is used to add input capabilities on a custom element.
         _sanitize: XP.mock(),
 
         /**
+         * The method that will select the adapted input.
+         *
+         * @method _select
+         * @abstract
+         */
+        _select: XP.mock(),
+
+        /**
          * The method that will update adapted input's attributes.
          *
          * @method _update
@@ -146,6 +146,21 @@ This behavior is used to add input capabilities on a custom element.
         findLabel: function () {
             var self = this, label = (self.id && XP.getElement('label[for="' + self.id + '"]'));
             return label || XP.findParentElement(Polymer.dom(self), 'label') || null;
+        },
+
+        /**
+         * Selects the input.
+         *
+         * @method select
+         * @param {boolean} [reset = false]
+         * @returns {Element}
+         */
+        select: function (reset) {
+            var self = this;
+            if (reset) { self.reset(); }
+            self.focus();
+            self._select();
+            return self;
         },
 
         /**
@@ -383,7 +398,7 @@ This behavior is used to add input capabilities on a custom element.
              *
              * @attribute empty-label
              * @type boolean
-             * @default false
+             * @default true
              * @notifies
              * @readonly
              */
@@ -391,7 +406,8 @@ This behavior is used to add input capabilities on a custom element.
                 computed: '_computeEmptyLabel(label)',
                 notify: true,
                 reflectToAttribute: true,
-                type: Boolean
+                type: Boolean,
+                value: true
             },
 
             /**
