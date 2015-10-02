@@ -16,16 +16,12 @@ This behavior is used to add input capabilities on a custom element.
 @homepage http://expandjs.com/elements/xp-input-behavior
 @repository https://github.com/ExpandJS/xp-input-behavior
 
-@behavior xp-adapter-behavior /bower_components/xp-adapter-behavior/xp-adapter-behavior.html
-
 @dependency polymer Polymer/polymer#^1.1.0
 @dependency expandjs ExpandJS/expandjs#0.9.10
-@dependency xp-adapter-behavior ExpandJS/xp-adapter-behavior#0.9.10
 -->
 
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../expandjs/expandjs.html">
-<link rel="import" href="../xp-adapter-behavior/xp-adapter-behavior.html">
 
 <script>
     Polymer.XPInputBehaviorImp = {
@@ -291,8 +287,7 @@ This behavior is used to add input capabilities on a custom element.
 
         // LISTENERS
         listeners: {
-            'click': '_clickHandler',
-            'adaptee-changed': '_adapteeChanged'
+            'click': '_clickHandler'
         },
 
         // OBSERVERS
@@ -302,6 +297,22 @@ This behavior is used to add input capabilities on a custom element.
 
         // PROPERTIES
         properties: {
+
+            /**
+             * The adapted element.
+             *
+             * @attribute adaptee
+             * @type Element
+             * @notifies
+             * @readonly
+             */
+            adaptee: {
+                notify: true,
+                observer: '_adapteeChanged',
+                readOnly: true,
+                type: Object,
+                value: null
+            },
 
             /**
              * If set to true, the input will focus on attach.
@@ -820,7 +831,6 @@ This behavior is used to add input capabilities on a custom element.
     };
 
     Polymer.XPInputBehavior = [
-        Polymer.XPAdapterBehavior,
         Polymer.XPInputBehaviorImp
     ];
 </script>
