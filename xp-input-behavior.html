@@ -17,7 +17,7 @@ This behavior is used to add input capabilities on a custom element.
 @repository https://github.com/ExpandJS/xp-input-behavior
 
 @dependency polymer Polymer/polymer#^1.1.0
-@dependency expandjs ExpandJS/expandjs#0.9.10
+@dependency expandjs ExpandJS/expandjs#0.9.11
 -->
 
 <link rel="import" href="../polymer/polymer.html">
@@ -62,15 +62,6 @@ This behavior is used to add input capabilities on a custom element.
          * @abstract
          */
         focus: XP.mock(),
-
-        /**
-         * The method that will update element's validation state.
-         *
-         * @method updateValidation
-         * @param {boolean | string} [invalidMessage = ""]
-         * @abstract
-         */
-        updateValidation: XP.mock(),
 
         /*********************************************************************/
 
@@ -131,6 +122,15 @@ This behavior is used to add input capabilities on a custom element.
          */
         _update: XP.mock(),
 
+        /**
+         * The method that will validate adapted input's value.
+         *
+         * @method _validate
+         * @param {boolean | string} [invalidMessage = ""]
+         * @abstract
+         */
+        _validate: XP.mock(),
+
         /*********************************************************************/
 
         /**
@@ -184,6 +184,19 @@ This behavior is used to add input capabilities on a custom element.
             return self;
         },
 
+        /**
+         * Validates the element's model.
+         *
+         * @method validate
+         * @returns {Element}
+         */
+        validate: function () {
+            var self = this;
+            self._validate();
+            self.fire('xp-input-validation', {firer: self, model: self.model});
+            return self;
+        },
+
         /*********************************************************************/
 
         /**
@@ -194,22 +207,11 @@ This behavior is used to add input capabilities on a custom element.
          * @private
          */
         _refresh: function () {
-
-            // Vars
             var self = this;
-
-            // Checking
             if (!self.adaptee) { return self; }
-
-            // Updating
             self._update();
-
-            // Sanitizing
             self._sanitize();
-
-            // Validating
-            if (self.value || !self.required) { self._validate(); }
-
+            if (self.value || !self.required) { self.validate(); }
             return self;
         },
 
@@ -257,20 +259,6 @@ This behavior is used to add input capabilities on a custom element.
         },
 
         /**
-         * Validates the element's model.
-         *
-         * @method _validate
-         * @returns {Element}
-         * @private
-         */
-        _validate: function () {
-            var self = this;
-            self.updateValidation();
-            self.fire('xp-input-validation', {firer: self, model: self.model});
-            return self;
-        },
-
-        /**
          * Updates the element's model.
          *
          * @method _updateModel
@@ -284,6 +272,11 @@ This behavior is used to add input capabilities on a custom element.
         },
 
         /*********************************************************************/
+
+        // ATTRIBUTES
+        hostAttributes: {
+            input: true
+        },
 
         // LISTENERS
         listeners: {
@@ -392,7 +385,7 @@ This behavior is used to add input capabilities on a custom element.
              *
              * @attribute empty
              * @type boolean
-             * @default false
+             * @default true
              * @notifies
              * @readonly
              */
@@ -401,7 +394,7 @@ This behavior is used to add input capabilities on a custom element.
                 readOnly: true,
                 reflectToAttribute: true,
                 type: Boolean,
-                value: false
+                value: true
             },
 
             /**
@@ -554,6 +547,7 @@ This behavior is used to add input capabilities on a custom element.
              * @readonly
              */
             primitive: {
+                observer: '_primitiveChanged',
                 readOnly: true,
                 type: String,
                 value: 'string'
@@ -642,7 +636,7 @@ This behavior is used to add input capabilities on a custom element.
             if (self.adaptee) { self._commitTo(); }
 
             // Validating
-            if (self.adaptee) { self._validate(); }
+            if (self.adaptee) { self.validate(); }
 
             // Firing
             self.fire('xp-input-change', {firer: self, isChanged: self.changed, model: self.model});
@@ -651,11 +645,8 @@ This behavior is used to add input capabilities on a custom element.
         // OBSERVER
         _focusedChanged: function (post) {
 
-            // Vars
-            var self = this;
-
             // Propagating
-            XP.setAttribute(self.findLabel(), 'focused', post);
+            XP.setAttribute(this.findLabel(), 'focused', post);
         },
 
         // OBSERVER
@@ -686,6 +677,13 @@ This behavior is used to add input capabilities on a custom element.
 
             // Casting
             self[self.primitive === 'boolean' ? 'checked' : 'value'] = self._toValue(post);
+        },
+
+        // OBSERVER
+        _primitiveChanged: function (post) {
+
+            // Setting
+            if (post === 'boolean') { this._setEmpty(false); }
         },
 
         // OBSERVER
@@ -726,7 +724,7 @@ This behavior is used to add input capabilities on a custom element.
             if (self.adaptee) { self._commitTo(); }
 
             // Validating
-            if (self.adaptee) { self._validate(); }
+            if (self.adaptee) { self.validate(); }
 
             // Firing
             self.fire('xp-input-change', {firer: self, isChanged: self.changed, model: self.model});
