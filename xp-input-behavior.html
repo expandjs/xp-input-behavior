@@ -162,7 +162,7 @@ A behavior used to add input capabilities on a custom element.
 
             // Vars
             var self  = this,
-                root  = self.domHost && Polymer.dom(self.domHost.root),
+                root  = self.id && Polymer.dom(self.domHost ? self.domHost.root : document),
                 found = self.id && root.querySelector('label[for="' + self.id + '"]');
 
             // Finding
@@ -507,6 +507,22 @@ A behavior used to add input capabilities on a custom element.
             },
 
             /**
+             * If set to true, the input is hidden.
+             *
+             * @attribute hidden
+             * @type boolean
+             * @default false
+             * @notifies
+             */
+            hidden: {
+                notify: true,
+                observer: '_hiddenObserver',
+                reflectToAttribute: true,
+                type: Boolean,
+                value: false
+            },
+
+            /**
              * The input's initial state.
              *
              * @attribute initial
@@ -602,7 +618,7 @@ A behavior used to add input capabilities on a custom element.
              */
             model: {
                 notify: true,
-                observer: '_modelObserver',
+                observer: '_modelObserver'
             },
 
             /**
@@ -633,6 +649,16 @@ A behavior used to add input capabilities on a custom element.
                 reflectToAttribute: true,
                 type: String,
                 value: ''
+            },
+
+            /**
+             * An additional input's model notification path.
+             *
+             * @attribute path
+             * @type string
+             */
+            path: {
+                type: String
             },
 
             /**
@@ -726,14 +752,14 @@ A behavior used to add input capabilities on a custom element.
         _disabledObserver: function () {
 
             // Setting
-            XP.setAttribute(this.findLabel(), 'disabled', this.disabled);
+            if (this.isAttached) { XP.setAttribute(this.findLabel(), 'disabled', this.disabled); }
         },
 
         // OBSERVER
         _focusedObserver: function () {
 
             // Setting
-            XP.setAttribute(this.findLabel(), 'focused', this.focused);
+            if (this.isAttached) { XP.setAttribute(this.findLabel(), 'focused', this.focused); }
         },
 
         // OBSERVER
@@ -742,6 +768,19 @@ A behavior used to add input capabilities on a custom element.
             // Listening
             if (pre) { this.unlisten(pre, 'reset', '_resetHandler'); }
             if (post) { this.listen(post, 'reset', '_resetHandler'); }
+        },
+
+        // OBSERVER
+        _hiddenObserver: function () {
+
+            // Vars
+            var self = this;
+
+            // Setting
+            if (self.hidden) { self.model = null; }
+
+            // Setting
+            if (self.isAttached) { XP.setAttribute(self.findLabel(), 'hidden', self.hidden); }
         },
 
         // OBSERVER
@@ -780,6 +819,9 @@ A behavior used to add input capabilities on a custom element.
 
             // Setting
             if (XP.isDefined(self.initial.model)) { self._setModified(self.model !== self.initial.model); }
+
+            // Firing
+            if (self.domHost && self.path) { self.domHost.notifyPath(self.path, self.model); }
 
             // Casting
             self[self.primitive === 'boolean' ? 'checked' : 'value'] = self._toValue(self.model);
@@ -826,11 +868,17 @@ A behavior used to add input capabilities on a custom element.
         attached: function () {
 
             // Vars
-            var self = this;
+            var self  = this,
+                label = self.findLabel();
 
             // Setting
-            self._setForm(XP.findParentElement(this, 'form') || null);
+            self._setForm(XP.findParentElement(self, 'form') || null);
             self._setInvalid(false);
+
+            // Overriding
+            XP.setAttribute(label, 'disabled', self.disabled);
+            XP.setAttribute(label, 'focused', self.focused);
+            XP.setAttribute(label, 'hidden', self.hidden);
 
             // Listening
             if (self.scrollIntoViewIfNeeded) { self.listen(window, 'resize', '_resizeHandler'); }

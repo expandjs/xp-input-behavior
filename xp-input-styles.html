@@ -44,6 +44,10 @@ A stylesheet used to stylize an input element.
                 pointer-events: none !important;
             }
 
+            :host([hidden]) {
+                display: none !important;
+            }
+
             :host([inline]) {
                 display: inline-block;
                 width: 182px;
