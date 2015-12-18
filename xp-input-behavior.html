@@ -919,10 +919,10 @@ A behavior used to add input capabilities on a custom element.
             // Disconnecting
             if (self.indexObserver) { self.indexObserver.disconnect(); }
 
-            // Indexing
-            self.async(function () { self._commitIndex(Math.max(self.tabIndex, 0)); });
+            // Committing
+            self.async(self._commitIndex.bind(self, Math.max(self.tabIndex, 0)));
 
-            // Setting
+            // Removing
             self.removeAttribute(self.input ? 'tabindex' : '');
 
             // Observing
