@@ -821,7 +821,7 @@ A behavior used to add input capabilities on a custom element.
             if (XP.isDefined(self.initial.model)) { self._setModified(self.model !== self.initial.model); }
 
             // Firing
-            if (self.domHost && self.path) { self.domHost.notifyPath(self.path, self.model); }
+            if (self.domHost && self.path) { self.domHost.set(self.path, self.model); }
 
             // Casting
             self[self.primitive === 'boolean' ? 'checked' : 'value'] = self._toValue(self.model);
