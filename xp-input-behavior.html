@@ -219,7 +219,10 @@ A behavior used to add input capabilities on a custom element.
         reset: function () {
 
             // Vars
-            var self = XP.assign(this, this.initial);
+            var self = this;
+
+            // Resetting
+            self.model = self.memento;
 
             // Setting
             self._setInvalid(false);
@@ -523,18 +526,15 @@ A behavior used to add input capabilities on a custom element.
             },
 
             /**
-             * The input's initial state.
+             * The input's model's memento.
              *
-             * @attribute initial
-             * @type Object
+             * @attribute memento
+             * @type *
              * @notifies
              * @readonly
              */
-            initial: {
-                notify: true,
-                readOnly: true,
-                type: Object,
-                value: function () { return {}; }
+            memento: {
+                notify: true
             },
 
             /**
@@ -631,8 +631,8 @@ A behavior used to add input capabilities on a custom element.
              * @readonly
              */
             modified: {
+                computed: '_computeModified(memento, model)',
                 notify: true,
-                readOnly: true,
                 reflectToAttribute: true,
                 type: Boolean,
                 value: false
@@ -718,6 +718,11 @@ A behavior used to add input capabilities on a custom element.
         /*********************************************************************/
 
         // COMPUTER
+        _computeModified: function (memento, model) {
+            return memento !== model;
+        },
+
+        // COMPUTER
         _computePrimitive: function (type) {
             if (type === 'checkbox' || type === 'radio') { return 'boolean'; }
             if (type === 'number' || type === 'range') { return 'number'; }
@@ -777,7 +782,7 @@ A behavior used to add input capabilities on a custom element.
             var self = this;
 
             // Setting
-            if (self.hidden) { self.model = null; }
+            self.async(function () { self.model = self.hidden ? null : self.model; });
 
             // Setting
             if (self.isAttached) { XP.setAttribute(self.findLabel(), 'hidden', self.hidden); }
@@ -817,11 +822,11 @@ A behavior used to add input capabilities on a custom element.
             // Vars
             var self = this;
 
-            // Setting
-            if (XP.isDefined(self.initial.model)) { self._setModified(self.model !== self.initial.model); }
+            // Memento
+            if (!XP.isDefined(self.memento)) { self.memento = self.model; }
 
             // Firing
-            if (self.domHost && self.path) { self.domHost.set(self.path, self.model); }
+            self.async(function () { return self.path && self.domHost && self.domHost.set(self.path, self.model); });
 
             // Casting
             self[self.primitive === 'boolean' ? 'checked' : 'value'] = self._toValue(self.model);
@@ -883,7 +888,7 @@ A behavior used to add input capabilities on a custom element.
             // Listening
             if (self.scrollIntoViewIfNeeded) { self.listen(window, 'resize', '_resizeHandler'); }
 
-            // Frame 1
+            // Focusing
             if (self.autoFocus) { requestAnimationFrame(self.focus.bind(self)); }
         },
 
@@ -938,20 +943,14 @@ A behavior used to add input capabilities on a custom element.
             // Mapping
             self.mastersMap.form = 'form';
 
-            // Delaying
-            self.async(function () {
+            // Setting
+            self.async(function () { self.model = XP.isDefined(self.model) ? self.model : null; });
 
-                // Setting
-                self.set('initial.checked', self.checked = (self.primitive === 'boolean' && (self._toValue(self.model) || self.checked)) || false);
-                self.set('initial.value', self.value = (self.primitive !== 'boolean' && (self._toValue(self.model) || self.value)) || '');
-                self.set('initial.model', self.model);
+            // Injecting
+            self.async(self._inject.bind(self));
 
-                // Injecting
-                self._inject();
-
-                // Committing
-                self._commitTo();
-            });
+            // Committing
+            self.async(self._commitTo.bind(self));
         },
 
         /*********************************************************************/
@@ -974,7 +973,7 @@ A behavior used to add input capabilities on a custom element.
         _clickHandler: function () {
 
             // Focusing
-            this.focus();
+            if (!this.disabled) { this.focus(); }
         },
 
         // HANDLER

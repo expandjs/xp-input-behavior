@@ -33,6 +33,7 @@ A stylesheet used to stylize an input element.
                 position: relative;
                 text-align: left;
                 -moz-user-select: none;
+                -webkit-tap-highlight-color: transparent;
                 -webkit-user-select: none;
                 user-select: none;
                 vertical-align: top;
@@ -40,7 +41,6 @@ A stylesheet used to stylize an input element.
 
             :host([disabled]) {
                 cursor: not-allowed !important;
-                pointer-events: none !important;
             }
 
             :host([hidden]) {
@@ -50,6 +50,10 @@ A stylesheet used to stylize an input element.
             :host([inline]) {
                 display: inline-block;
                 width: 182px;
+            }
+
+            :host([disabled]) .wrapper {
+                pointer-events: none !important;
             }
 
             /* CONTENT */
